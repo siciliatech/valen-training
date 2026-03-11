@@ -1,80 +1,55 @@
 import { Request, Response } from "express";    
-import { Item } from "./interfaces";
-import { validatorCreateItem, validatorUpdateItem } from "./validators";
+import * as ItemService from "./itemsService.js";
 
-const items : Item[] = [
-    { id: 1, name: 'user1', description: 'user1@example.com' }
-]; 
-
-export const getItems = (req: Request, res: Response)=> {
-    res.json(items);
+export const getItems = async (req: Request, res: Response)=> {
+    try {
+        const items = await ItemService.getAllItems();
+        res.json(items);
+    } catch (error) {
+        res.status(500).json({ message: "Error al obtener los items" });
+    }
 };
 
-export const createItem = (req: Request, res: Response) => {
+export const createItem = async (req: Request, res: Response) => {
     try {
-        const errors = validatorCreateItem(req.body);
-        if(errors.length > 0){
-            return res.status(400).json({errors});
-        }
-
-        const newItem: Item ={
-            id: items.length + 1,
-            name : req.body.name,
-            description: req.body.description
-        };
-        items.push(newItem);
+        const newItem = await ItemService.createItem(req.body)
         res.status(201).json(newItem);
 
-    } catch (error) {
+    } catch (error: any) {
+        if (error.type === "VALIDATION_ERROR") {
+            return res.status(400).json({ message: "Error de validación", errors: error.details });
+        }
         res.status(500).json({message: "Error interno del servidor"});
     }
     
 }
-export const updateItem = (req: Request, res: Response) =>{
+export const updateItem = async (req: Request, res: Response) =>{
     try {
-        const errors = validatorUpdateItem(req.body);
-        
-        if(errors.length>0){
-            return res.status(400).json({errors});
-        } 
-
         const id = Number(req.params.id);
-        const itemIndex = items.findIndex(item => item.id === id);
-
-        if(itemIndex === -1){
-            return res.status(404).json({ message: "Item no encontrado"});
+        const updatedItem = await ItemService.updateItem(id, req.body);
+        res.status(201).json(updatedItem);
+       
+    } catch (error: any) {
+        if(error.type === "VALIDATION_ERROR"){
+            return res.status(400).json({ message: "Error de validación", errors: error.details})
         }
-        
-        const { name, description } = req.body;
-
-        if(name !== undefined){
-            items[itemIndex].name = name;
-        } 
-
-        if(description !== undefined) {
-            items[itemIndex].description = description;
+        if (error.type === "NOT_FOUND") {
+            return res.status(404).json({ message: error.message });
         }
-
-        res.json(items[itemIndex]);
-
-    } catch (error) {
-        res.status(500).json({message: "Error interno del servidor"});
+        res.status(500).json({ message: "Error al actualizar" })
     }
 
 }
-export const deleteItem = (req: Request, res: Response) =>{
+export const deleteItem = async (req: Request, res: Response) =>{
     try {
         const id = Number(req.params.id);
-        const itemIndex = items.findIndex(item => item.id === id);
-        
-        if(itemIndex === -1)
-            return res.status(404).json({message: "Item no encontrado"});
-        
-        const deleted = items.splice(itemIndex, 1)[0];
-        res.status(200).json(deleted);
-
-    } catch (error) {
-        res.status(500).json({message: "Error interno del servidor"});
+        await ItemService.deleteItem(id);
+        res.status(204).send();
+    } catch (error: any) {
+        if(error.type === "NOT_FOUND"){
+            return res.status(404).json({ message: error.message });
+        }
+        res.status(500).json({ message: "Error al eliminar" });
     }
 
 }
