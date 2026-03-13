@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "prisma:sync": "npx prisma migrate dev",
+    "dev": "npm run prisma:sync && tsx watch src/server.ts",
+    "build": "npx prisma generate && tsc",
     "start": "node dist/server.js"
   },
   "repository": {
