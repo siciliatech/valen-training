@@ -1,4 +1,3 @@
-import { describe } from "node:test";
 import * as ItemRepository from "./itemsRepository.js";
 import { validatorCreateItem, validatorUpdateItem } from "./validators.js";
 
