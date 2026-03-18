@@ -1,0 +1,18 @@
+# Dependencias locales (se deben instalar dentro del contenedor)
+node_modules
+npm-debug.log
+
+# Compilación y caché
+dist
+.npm
+.eslintcache
+
+# Archivos de entorno y secretos
+.env
+.env.example
+.git
+.gitignore
+
+# Documentación y archivos de configuración del IDE
+README.md
+.vscode
